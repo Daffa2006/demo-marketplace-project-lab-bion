@@ -9,8 +9,8 @@ import {
   MessageCircle,
   ArrowLeft,
 } from "lucide-react";
-import Input from "../components/Input";
-import Textarea from "../components/Textarea";
+import Input from "../Components/Input";
+import Textarea from "../Components/Textarea";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();

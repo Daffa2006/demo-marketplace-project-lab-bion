@@ -1,4 +1,4 @@
-import Input from "../components/Input";
+import Input from "../Components/Input";
 
 export default function LoginPage() {
   function handleSubmit(e) {

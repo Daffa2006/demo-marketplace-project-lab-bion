@@ -9,7 +9,7 @@ import {
   Phone,
   ShoppingBag,
 } from "lucide-react";
-import Input from "../components/Input";
+import Input from "../Components/Input";
 import { formatRupiah } from "../helpers";
 export default function CheckOrderPage() {
   const [searchQuery, setSearchQuery] = useState("");

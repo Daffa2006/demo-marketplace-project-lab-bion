@@ -1,10 +1,10 @@
 // pages/EditProductPage.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import Input from "../components/Input";
-import Textarea from "../components/Textarea";
-import Checkbox from "../components/Checkbox";
-import FileInput from "../components/FileInput";
+import Input from "../Components/Input";
+import Textarea from "../Components/Textarea";
+import Checkbox from "../Components/Checkbox";
+import FileInput from "../Components/FileInput";
 
 export default function EditProductPage() {
   const { id } = useParams();

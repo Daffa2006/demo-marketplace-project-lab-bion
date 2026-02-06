@@ -1,8 +1,8 @@
 // pages/ProductListPage.jsx
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import Input from "../components/Input";
-import ProductCard from "../components/ProductCard";
+import Input from "../Components/Input";
+import ProductCard from "../Components/ProductCard";
 
 export default function ProductListPage() {
   const [products, setProducts] = useState([]);

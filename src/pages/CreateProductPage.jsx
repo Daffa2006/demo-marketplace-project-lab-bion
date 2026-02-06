@@ -1,9 +1,9 @@
 // pages/CreateProductPage.jsx
 import { useState, useRef } from "react";
 import Swal from "sweetalert2";
-import Input from "../components/Input";
-import Textarea from "../components/Textarea";
-import Checkbox from "../components/Checkbox";
+import Input from "../Components/Input";
+import Textarea from "../Components/Textarea";
+import Checkbox from "../Components/Checkbox";
 import FileInput from "../Components/FileInput";
 import Select from "../Components/Select";
 export default function CreateProductPage() {
