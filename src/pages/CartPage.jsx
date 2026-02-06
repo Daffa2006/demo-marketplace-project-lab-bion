@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import { Trash2, ShoppingBag, ArrowLeft, Plus, Minus } from "lucide-react";
-import { formatRupiah } from "../../../TP2-Practicum/digefrags-TP2/src/helpers";
+import { formatRupiah } from "../helpers";
 
 export default function CartPage() {
   const navigate = useNavigate();
