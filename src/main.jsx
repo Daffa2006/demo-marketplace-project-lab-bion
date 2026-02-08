@@ -15,6 +15,8 @@ import CheckOrderPage from "./pages/CheckOrder.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import AdminOnly from "./routes/AdminOnly.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
@@ -24,14 +26,18 @@ createRoot(document.getElementById("root")).render(
 
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/products" element={<ProductListPage />} />
-          <Route path="/carts" element={<CartPage />} />
-          <Route path="/checkouts" element={<CheckoutPage />} />
-          <Route path="/check-orders" element={<CheckOrderPage />} />
-          <Route path="/products/create" element={<CreateProductPage />} />
           <Route path="/products/detail" element={<ProductDetailPage />} />
-          <Route path="/products/edit" element={<EditProductPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/carts" element={<CartPage />} />
+            <Route path="/checkouts" element={<CheckoutPage />} />
+            <Route element={<AdminOnly />}>
+              <Route path="/check-orders" element={<CheckOrderPage />} />
+              <Route path="/products/create" element={<CreateProductPage />} />
+              <Route path="/products/edit" element={<EditProductPage />} />
+            </Route>
+          </Route>
           <Route path="/ui" element={<Ui />} />
         </Route>
       </Routes>
