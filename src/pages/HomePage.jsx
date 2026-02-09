@@ -2,72 +2,61 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import ProductCard from "../Components/ProductCard";
+import EmptyState from "../Components/EmptyState";
+import api from "../lib/axios";
+import Swal from "sweetalert2";
+import { Loader2 } from "lucide-react";
+
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newestProducts, setNewestProducts] = useState([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingNewest, setLoadingNewest] = useState(true);
 
   useEffect(() => {
-    fetchProducts();
+    fetchFeaturedProducts();
+    fetchNewestProducts();
   }, []);
 
-  const fetchProducts = async () => {
-    // ============================================
-    // TODO: FETCH PRODUCTS API
-    // ============================================
-    /*
-    const response = await fetch("https://your-api.com/api/products?featured=true");
-    const data = await response.json();
-    setFeaturedProducts(data.featured);
-    setNewestProducts(data.newest);
-    */
-    // ============================================
+  const fetchFeaturedProducts = async () => {
+    try {
+      setLoadingFeatured(true);
+      const { data } = await api.get("/products/featured?limit=8");
 
-    // MOCK DATA untuk Featured Products (Bento Grid)
-    const mockFeatured = [
-      {
-        id: 1,
-        name: "Dior Sauvage EDP",
-        price: 1450000,
-        image:
-          "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&auto=format&fit=crop&q=60",
-        area: "area1",
-      },
-      {
-        id: 2,
-        name: "Bleu de Chanel",
-        price: 1650000,
-        image:
-          "https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=600&auto=format&fit=crop&q=60",
-        area: "area2",
-      },
-      {
-        id: 3,
-        name: "YSL La Nuit De L’Homme",
-        price: 1550000,
-        image:
-          "https://images.unsplash.com/photo-1619994403073-2cec99c5d0c1?w=600&auto=format&fit=crop&q=60",
-        area: "area3",
-      },
-      {
-        id: 4,
-        name: "Versace Eros",
-        price: 1200000,
-        image:
-          "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=400&auto=format&fit=crop&q=60",
-        area: "area4",
-      },
-      {
-        id: 5,
-        name: "Paco Rabanne Invictus",
-        price: 1100000,
-        image:
-          "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&auto=format&fit=crop&q=60",
-        area: "area5",
-      },
-    ];
+      // Add grid area for bento layout
+      const productsWithArea = data.data.map((product, index) => ({
+        ...product,
+        area: `area${index + 1}`,
+      }));
 
-    setFeaturedProducts(mockFeatured);
-    setNewestProducts(mockNewest);
+      setFeaturedProducts(productsWithArea);
+    } catch (error) {
+      console.error("Fetch featured products error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Load Featured Products",
+        text: error.response?.data?.message || "Please try again later",
+      });
+    } finally {
+      setLoadingFeatured(false);
+    }
+  };
+
+  const fetchNewestProducts = async () => {
+    try {
+      setLoadingNewest(true);
+      const { data } = await api.get("/products/newest?limit=8");
+      setNewestProducts(data.data);
+    } catch (error) {
+      console.error("Fetch newest products error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Load Newest Products",
+        text: error.response?.data?.message || "Please try again later",
+      });
+    } finally {
+      setLoadingNewest(false);
+    }
   };
 
   const formatRupiah = (price) => {
@@ -78,45 +67,80 @@ export default function HomePage() {
     }).format(price);
   };
 
-  const handleNavigateToDetailProduct = (productId) => {
-    // Navigate handled by Link component
-  };
-
   return (
     <div>
+      {/* Featured Products Section */}
       <h2 style={{ margin: "32px 0px" }}>Featured Products</h2>
-      <div className="bento-grid">
-        {featuredProducts.map((product) => (
-          <Link
-            to={`/products/${product.id}`}
-            key={product.id}
-            className="bento-item"
-            style={{ gridArea: product.area }}
-          >
-            <img src={product.image} alt={product.name} />
-            <figcaption>
-              <h3>{product.name}</h3>
-              <p>{formatRupiah(product.price)}</p>
-            </figcaption>
-          </Link>
-        ))}
+
+      {loadingFeatured ? (
+        <div className="loading-state" style={{ textAlign: "center", padding: "3rem" }}>
+          <Loader2 className="spin" size={48} style={{ margin: "0 auto" }} />
+          <p style={{ marginTop: "1rem", color: "#6b7280" }}>Loading featured products...</p>
+        </div>
+      ) : featuredProducts.length > 0 ? (
+        <div className="bento-grid">
+          {featuredProducts.slice(0, 5).map((product) => (
+            <Link
+              to={`/products/detail?id=${product._id}`}
+              key={product._id}
+              className="bento-item"
+              style={{ gridArea: product.area }}
+            >
+              <img
+                src={product.images?.[0] || "https://via.placeholder.com/400"}
+                alt={product.name}
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/400?text=No+Image";
+                }}
+              />
+              <figcaption>
+                <h3>{product.name}</h3>
+                <p>{formatRupiah(product.price)}</p>
+              </figcaption>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No featured products"
+          description="Check back later for featured products"
+        />
+      )}
+
+      {/* Newest Products Section */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "32px 0px" }}>
+        <h2 style={{ margin: 0 }}>Newest Products</h2>
+        <Link to="/products" className="btn secondary">
+          View All Products
+        </Link>
       </div>
 
-      <h2 style={{ margin: "32px 0px" }}>Newest Products</h2>
-      <div className="products-grid">
-        {newestProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            name={product.name}
-            stock={product.stock}
-            price={product.price}
-            category={product.category}
-            image={product.image}
-            isFeatured={product.isFeatured}
-          />
-        ))}
-      </div>
+      {loadingNewest ? (
+        <div className="loading-state" style={{ textAlign: "center", padding: "3rem" }}>
+          <Loader2 className="spin" size={48} style={{ margin: "0 auto" }} />
+          <p style={{ marginTop: "1rem", color: "#6b7280" }}>Loading newest products...</p>
+        </div>
+      ) : newestProducts.length > 0 ? (
+        <div className="products-grid">
+          {newestProducts.map((product) => (
+            <ProductCard
+              key={product._id}
+              id={product._id}
+              name={product.name}
+              stock={product.stock}
+              price={product.price}
+              category={product.category}
+              image={product.images?.[0]}
+              isFeatured={product.isFeatured}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No products available"
+          description="Check back later for new products"
+        />
+      )}
     </div>
   );
 }

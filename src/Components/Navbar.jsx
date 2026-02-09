@@ -47,30 +47,34 @@ export default function Navbar() {
       <div>
         <img src={logo} alt="Logo Aplikasi" />
         <nav className={isOpen ? "open" : ""}>
-          <Link to="/" className="header-link" onClick={() => setIsOpen(false)}>
-            Home
-          </Link>
-          <Link
-            to="/products"
-            className="header-link"
-            onClick={() => setIsOpen(false)}
-          >
-            List product
-          </Link>
-          <Link
-            to="/products/create"
-            className="header-link"
-            onClick={() => setIsOpen(false)}
-          >
-            Create product
-          </Link>
-          <Link
-            to="/check-orders"
-            className="header-link"
-            onClick={() => setIsOpen(false)}
-          >
-            Check Orders
-          </Link>
+          {isAuthenticated && (
+            <>
+              <Link to="/" className="header-link" onClick={() => setIsOpen(false)}>
+                Home
+              </Link>
+              <Link
+                to="/products"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
+                List product
+              </Link>
+              <Link
+                to="/products/create"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
+                Create product
+              </Link>
+              <Link
+                to="/check-orders"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
+                Check Orders
+              </Link>
+            </>
+          )}
 
 
           {/* Mobile user profile */}
