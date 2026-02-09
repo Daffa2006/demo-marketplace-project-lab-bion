@@ -2,7 +2,7 @@ import { useState } from "react";
 import Input from "../Components/Input";
 import api from "../lib/axios";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -12,8 +12,6 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirm_password: "",
-    phone: "",
-    address: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -39,10 +37,18 @@ export default function RegisterPage() {
         text: "Account berhasil dibuat",
       });
 
-      // Optional simpan token
+      // Simpan token untuk auto-login
       localStorage.setItem("online_marketplace_access_token", data.data.token);
 
-      navigate("/login");
+      // Simpan user data untuk ditampilkan di navbar
+      localStorage.setItem("online_marketplace_user", JSON.stringify({
+        name: data.data.user.name,
+        email: data.data.user.email,
+        role: data.data.user.role,
+      }));
+
+      // Auto-login: redirect ke home page
+      navigate("/");
     } catch (error) {
       let message = "Terjadi kesalahan";
 
@@ -102,25 +108,16 @@ export default function RegisterPage() {
           required
         />
 
-        <Input
-          label="Phone"
-          name="phone"
-          value={form.phone}
-          onChange={handleChange}
-          required
-        />
-
-        <Input
-          label="Address"
-          name="address"
-          value={form.address}
-          onChange={handleChange}
-          required
-        />
-
         <button disabled={loading} className="btn primary">
           {loading ? "Loading..." : "Register"}
         </button>
+
+        <p style={{ textAlign: "center", marginTop: "1rem" }}>
+          Sudah punya akun?{" "}
+          <Link to="/login" style={{ color: "var(--primary)", fontWeight: "600" }}>
+            Login di sini
+          </Link>
+        </p>
       </form>
     </div>
   );

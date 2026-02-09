@@ -2127,3 +2127,149 @@ header .hamburger {
     font-size: 13px;
   }
 }
+
+/* Order History Page */
+.order-history-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.order-history-page .page-header {
+  margin-bottom: 2rem;
+}
+
+.order-history-page .page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-foreground);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.order-history-page .page-header p {
+  color: var(--color-muted);
+  font-size: 16px;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.order-card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order-card-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0 0 0.5rem 0;
+}
+
+.order-card-header .order-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.order-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.order-items-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-foreground);
+  font-weight: 500;
+}
+
+.order-shipping {
+  padding: 1rem;
+  background-color: var(--color-muted-light);
+  border-radius: 8px;
+}
+
+.order-shipping strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-foreground);
+}
+
+.order-shipping p {
+  margin: 0.25rem 0;
+  color: var(--color-foreground);
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Spinner animation */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .order-history-page .page-header h1 {
+    font-size: 24px;
+  }
+
+  .order-card {
+    padding: 1rem;
+  }
+
+  .order-card-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+  }
+
+  .pagination > div {
+    order: -1;
+  }
+}

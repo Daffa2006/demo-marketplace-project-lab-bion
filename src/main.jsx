@@ -17,6 +17,8 @@ import LoginPage from "./pages/LoginPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import AdminOnly from "./routes/AdminOnly.jsx";
+import OrderHistoryPage from "./pages/OrderHistoryPage.jsx";
+import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
@@ -32,8 +34,9 @@ createRoot(document.getElementById("root")).render(
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/carts" element={<CartPage />} />
             <Route path="/checkouts" element={<CheckoutPage />} />
+            <Route path="/check-orders" element={<OrderHistoryPage />} />
+            <Route path="/check-orders/:id" element={<OrderDetailPage />} />
             <Route element={<AdminOnly />}>
-              <Route path="/check-orders" element={<CheckOrderPage />} />
               <Route path="/products/create" element={<CreateProductPage />} />
               <Route path="/products/edit" element={<EditProductPage />} />
             </Route>

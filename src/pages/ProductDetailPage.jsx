@@ -1,12 +1,19 @@
 // pages/ProductDetailPage.jsx
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
-import { ShoppingCart, CreditCard, ArrowLeft, Edit } from "lucide-react";
+import { useNavigate, Link, useSearchParams } from "react-router";
+import { ShoppingCart, CreditCard, ArrowLeft, Edit, Loader2, User } from "lucide-react";
 import { formatRupiah } from "../helpers";
+import { useAuth } from "../hooks/useAuth";
+import { useCart } from "../hooks/useCart";
+import api from "../lib/axios";
+import Swal from "sweetalert2";
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id");
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,82 +21,120 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
-
-      // ============================================
-      // TODO: FETCH API
-      // ============================================
-      /*
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`https://your-api.com/api/products/${id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch product");
-        }
-
-        const data = await response.json();
-        setProduct(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error:", error);
-        setLoading(false);
-      }
-      */
-      // ============================================
-
-      // MOCK DATA - Hapus saat sudah pakai API
-      setTimeout(() => {
-        setProduct({
-          id: id,
-          name: "Samsung Galaxy S24 Ultra",
-          price: 15999000,
-          stock: 25,
-          category: "Electronics",
-          isFeatured: true,
-          description:
-            "Flagship smartphone dengan kamera 200MP, layar Dynamic AMOLED 2X 6.8 inch, prosesor Snapdragon 8 Gen 3, RAM 12GB, dan storage 256GB. Dilengkapi dengan S Pen, baterai 5000mAh, dan fast charging 45W.",
-          images: [
-            "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800&h=800&fit=crop",
-            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=800&fit=crop",
-            "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&h=800&fit=crop",
-            "https://images.unsplash.com/photo-1592286927505-eb0e1b9c6c90?w=800&h=800&fit=crop",
-            "https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=800&h=800&fit=crop",
-          ],
-        });
-        setLoading(false);
-      }, 500);
-    };
-
-    fetchProduct();
+    if (id) {
+      fetchProduct();
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Product",
+        text: "Product ID is missing",
+      }).then(() => {
+        navigate("/products");
+      });
+    }
   }, [id]);
 
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get(`/products/${id}`);
+      setProduct(data.data);
+    } catch (error) {
+      console.error("Fetch product error:", error);
+
+      const errorMessage = error.response?.data?.message || "Failed to load product";
+
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Load Product",
+        text: errorMessage,
+      }).then(() => {
+        navigate("/products");
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddToCart = () => {
-    // TODO: Implement add to cart logic
-    console.log("Add to cart:", { productId: id, quantity });
-    alert(`Added ${quantity} item(s) to cart!`);
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: "Please login to add items to cart",
+        showCancelButton: true,
+        confirmButtonText: "Login",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
+      return;
+    }
+
+    if (!product) return;
+
+    try {
+      addToCart(product, quantity);
+      Swal.fire({
+        icon: "success",
+        title: "Added to Cart",
+        text: `Added ${quantity} ${product.name} to cart!`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Add to cart error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Add",
+        text: "Failed to add item to cart",
+      });
+    }
   };
 
   const handleCheckout = () => {
-    // TODO: Implement checkout logic
-    console.log("Checkout:", { productId: id, quantity });
-    alert(`Proceeding to checkout with ${quantity} item(s)`);
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: "Please login to checkout",
+        showCancelButton: true,
+        confirmButtonText: "Login",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
+      return;
+    }
+
+    // Add to cart first, then navigate to checkout
+    if (product) {
+      addToCart(product, quantity);
+      navigate("/checkouts");
+    }
   };
 
   const handleQuantityChange = (value) => {
+    if (!product) return;
     const newQuantity = Math.max(1, Math.min(product.stock, value));
     setQuantity(newQuantity);
   };
 
   if (loading) {
     return (
-      <div className="product-detail-loading">
+      <div className="product-detail-loading" style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "400px",
+        gap: "1rem"
+      }}>
+        <Loader2 className="spin" size={48} />
         <h2>Loading product...</h2>
       </div>
     );
@@ -97,9 +142,12 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="product-detail-error">
+      <div className="product-detail-error" style={{
+        textAlign: "center",
+        padding: "3rem"
+      }}>
         <h2>Product not found</h2>
-        <button onClick={() => navigate("/products/lists")}>
+        <button className="btn primary" onClick={() => navigate("/products")}>
           Back to Products
         </button>
       </div>
@@ -119,32 +167,40 @@ export default function ProductDetailPage() {
         <div className="product-gallery">
           <figure className="main-image">
             <img
-              src={product.images[selectedImage]}
+              src={product.images?.[selectedImage] || "https://via.placeholder.com/800?text=No+Image"}
               alt={`${product.name} - Image ${selectedImage + 1}`}
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/800?text=No+Image";
+              }}
             />
             {product.isFeatured && (
               <span className="featured-badge">Featured</span>
             )}
           </figure>
 
-          <div className="thumbnail-gallery">
-            {product.images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`${product.name} thumbnail ${index + 1}`}
-                className={selectedImage === index ? "active" : ""}
-                onClick={() => setSelectedImage(index)}
-              />
-            ))}
-          </div>
+          {product.images && product.images.length > 1 && (
+            <div className="thumbnail-gallery">
+              {product.images.map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt={`${product.name} thumbnail ${index + 1}`}
+                  className={selectedImage === index ? "active" : ""}
+                  onClick={() => setSelectedImage(index)}
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/100?text=No+Image";
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Info Section */}
         <div className="product-info">
           <div className="product-header">
             <h1 className="product-name">{product.name}</h1>
-            <Link to={`/products/edit/${product.id}`} className="edit-button">
+            <Link to={`/products/edit?id=${product._id}`} className="edit-button">
               <Edit size={20} />
             </Link>
           </div>
@@ -173,19 +229,48 @@ export default function ProductDetailPage() {
               <span className="detail-value">{product.category}</span>
             </div>
 
+            {product.seller && (
+              <div className="detail-item">
+                <span className="detail-label">
+                  <User size={16} style={{ display: "inline", marginRight: "0.25rem" }} />
+                  Seller
+                </span>
+                <span className="detail-value">
+                  {product.seller.name}
+                  {product.seller.email && (
+                    <span style={{ fontSize: "0.875rem", color: "#6b7280", display: "block" }}>
+                      {product.seller.email}
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
+
+            {product.ratings && (
+              <div className="detail-item">
+                <span className="detail-label">Rating</span>
+                <span className="detail-value">
+                  {product.ratings.average > 0
+                    ? `⭐ ${product.ratings.average.toFixed(1)} (${product.ratings.count} reviews)`
+                    : "No ratings yet"
+                  }
+                </span>
+              </div>
+            )}
+
             <div className="detail-item">
               <span className="detail-label">Product ID</span>
-              <span className="detail-value">#{product.id}</span>
+              <span className="detail-value">#{product._id}</span>
             </div>
           </div>
 
           <div className="product-description">
             <h3>Description</h3>
-            <p>{product.description}</p>
+            <p>{product.description || "No description available"}</p>
           </div>
 
-          {/* Quantity Selector */}
-          {product.stock > 0 && (
+          {/* Quantity Selector - Only show when authenticated */}
+          {isAuthenticated && product.stock > 0 && (
             <div className="quantity-selector">
               <label>Quantity</label>
               <div className="quantity-controls">
@@ -214,25 +299,45 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="product-actions">
-            <button
-              className="btn secondary"
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-            >
-              <ShoppingCart size={20} />
-              <span>Add to Cart</span>
-            </button>
-            <button
-              className="btn primary"
-              onClick={handleCheckout}
-              disabled={product.stock === 0}
-            >
-              <CreditCard size={20} />
-              <span>Buy Now</span>
-            </button>
-          </div>
+          {/* Action Buttons - Only show when authenticated */}
+          {isAuthenticated ? (
+            <div className="product-actions">
+              <button
+                className="btn secondary"
+                onClick={handleAddToCart}
+                disabled={product.stock === 0}
+              >
+                <ShoppingCart size={20} />
+                <span>Add to Cart</span>
+              </button>
+              <button
+                className="btn primary"
+                onClick={handleCheckout}
+                disabled={product.stock === 0}
+              >
+                <CreditCard size={20} />
+                <span>Buy Now</span>
+              </button>
+            </div>
+          ) : (
+            <div className="login-prompt" style={{
+              padding: "1.5rem",
+              backgroundColor: "var(--color-muted-light)",
+              borderRadius: "8px",
+              textAlign: "center"
+            }}>
+              <p style={{ margin: "0 0 1rem 0", color: "var(--color-foreground)" }}>
+                Please login to purchase this product
+              </p>
+              <button
+                className="btn primary"
+                onClick={() => navigate("/login")}
+                style={{ margin: "0 auto" }}
+              >
+                Login to Continue
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import logo from "../assets/ai-generated-black.png";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { getInitials } from "../helpers";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -31,101 +34,132 @@ export default function Navbar() {
   useEffect(() => {
     setIsOpen(false);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    setIsDropdownOpen(false);
+    setIsOpen(false);
+    navigate("/login");
+  };
+
   return (
     <header>
       <div>
         <img src={logo} alt="Logo Aplikasi" />
         <nav className={isOpen ? "open" : ""}>
-          <Link to="/" className="header-link" onClick={() => setIsOpen(false)}>
-            Home
-          </Link>
-          <Link
-            to="/products"
-            className="header-link"
-            onClick={() => setIsOpen(false)}
-          >
-            List product
-          </Link>
-          <Link
-            to="/products/create"
-            className="header-link"
-            onClick={() => setIsOpen(false)}
-          >
-            Create product
-          </Link>
-          <Link
-            to="/check-orders"
-            className="header-link"
-            onClick={() => setIsOpen(false)}
-          >
-            Check Orders
-          </Link>
+          {isAuthenticated && (
+            <>
+              <Link to="/" className="header-link" onClick={() => setIsOpen(false)}>
+                Home
+              </Link>
+              <Link
+                to="/products"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
+                List product
+              </Link>
+              <Link
+                to="/products/create"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
+                Create product
+              </Link>
+              <Link
+                to="/check-orders"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
+                Check Orders
+              </Link>
+            </>
+          )}
+
 
           {/* Mobile user profile */}
-          <div className="mobile-user-profile">
-            <div className="avatar-circle">
-              {getInitials("Daffa Anaqi Farid")}
-            </div>
-            <div className="username">
-              <div>Daffa Anaqi Farid</div>
-              <div className="role">Admin</div>
-            </div>
-          </div>
+          {isAuthenticated ? (
+            <>
+              <div className="mobile-user-profile">
+                <div className="avatar-circle">
+                  {getInitials(user?.name || "User")}
+                </div>
+                <div className="username">
+                  <div>{user?.name || "User"}</div>
+                  <div className="role">{user?.role || "user"}</div>
+                </div>
+              </div>
 
-          {/* Mobile menu actions */}
-          <Link
-            to="/profile"
-            className="mobile-menu-item"
-            onClick={() => setIsOpen(false)}
-          >
-            Profile
-          </Link>
-          <Link
-            className="mobile-menu-item logout"
-            onClick={() => setIsOpen(false)}
-          >
-            Logout
-          </Link>
+              {/* Mobile menu actions */}
+              <Link
+                to="/profile"
+                className="mobile-menu-item"
+                onClick={() => setIsOpen(false)}
+              >
+                Profile
+              </Link>
+              <Link
+                className="mobile-menu-item logout"
+                onClick={handleLogout}
+              >
+                Logout
+              </Link>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="mobile-menu-item"
+              onClick={() => setIsOpen(false)}
+            >
+              Login
+            </Link>
+          )}
         </nav>
 
         <div className="header-right">
-          <div className="user-profile" ref={dropdownRef}>
-            <Link to="/carts">
-              <ShoppingCart style={{ width: "32px", height: "32px" }} />
+          {isAuthenticated ? (
+            <div className="user-profile" ref={dropdownRef}>
+              <Link to="/carts">
+                <ShoppingCart style={{ width: "32px", height: "32px" }} />
+              </Link>
+              <Link
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="avatar-circle"
+              >
+                {getInitials(user?.name || "User")}
+              </Link>
+              {isDropdownOpen && (
+                <ul className="user-profile-dropdown">
+                  <li className="profile">
+                    <div className="avatar-circle">
+                      {getInitials(user?.name || "User")}
+                    </div>
+                    <div className="username">
+                      <span>{user?.name || "User"}</span>
+                      <span className="role">{user?.role || "user"}</span>
+                    </div>
+                  </li>
+                  <li>
+                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>
+                      Profile
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      className="logout"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Link>
+                  </li>
+                </ul>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="btn primary" style={{ marginRight: "1rem" }}>
+              Login
             </Link>
-            <Link
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="avatar-circle"
-            >
-              {getInitials("Daffa Anaqi Farid")}
-            </Link>
-            {isDropdownOpen && (
-              <ul className="user-profile-dropdown">
-                <li className="profile">
-                  <div className="avatar-circle">
-                    {getInitials("Daffa Anaqi Farid")}
-                  </div>
-                  <div className="username">
-                    <span>Daffa Anaqi Farid</span>
-                    <span className="role">Admin</span>
-                  </div>
-                </li>
-                <li>
-                  <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>
-                    Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="logout"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    Logout
-                  </Link>
-                </li>
-              </ul>
-            )}
-          </div>
+          )}
           <Link to="/carts">
             <ShoppingCart
               className="mobile-shopping-cart"

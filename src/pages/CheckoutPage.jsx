@@ -8,117 +8,66 @@ import {
   User,
   MessageCircle,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import Input from "../Components/Input";
 import Textarea from "../Components/Textarea";
+import { useCart } from "../hooks/useCart";
+import { useAuth } from "../hooks/useAuth";
+import { formatRupiah } from "../helpers";
+import api from "../lib/axios";
+import Swal from "sweetalert2";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const { cart, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
 
-  const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    customerName: "",
     address: "",
     phone: "",
+    notes: "",
+    paymentMethod: "whatsapp",
   });
   const [errors, setErrors] = useState({});
 
+
   useEffect(() => {
-    const fetchCheckoutData = async () => {
-      setLoading(true);
+    // Pre-fill form with user data if available
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        customerName: user.name || "",
+      }));
+    }
+  }, [user]);
 
-      // ============================================
-      // TODO: FETCH CHECKOUT DATA API
-      // ============================================
-      /*
-      try {
-        const token = localStorage.getItem("token");
-
-        // Fetch user profile
-        const profileResponse = await fetch("https://your-api.com/api/profile", {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-        const profile = await profileResponse.json();
-
-        // Fetch cart items
-        const cartResponse = await fetch("https://your-api.com/api/cart", {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-        const cart = await cartResponse.json();
-
-        // Create order (generate order ID)
-        const orderResponse = await fetch("https://your-api.com/api/orders/create", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            items: cart.items
-          })
-        });
-        const order = await orderResponse.json();
-
-        setFormData({
-          name: profile.name || "",
-          address: profile.address || "",
-          phone: profile.phone || ""
-        });
-
-        setOrderData(order);
+  // Check cart only once after initial load
+  useEffect(() => {
+    if (!initialCheckDone) {
+      const timer = setTimeout(() => {
         setLoading(false);
-      } catch (error) {
-        console.error("Error:", error);
-        setLoading(false);
-      }
-      */
-      // ============================================
+        setInitialCheckDone(true);
 
-      // MOCK DATA - Hapus saat sudah pakai API
-      setTimeout(() => {
-        setFormData({
-          name: "Daffa Anaqi Farid",
-          address: "Jl. Street No. 123, Jakarta Tengah",
-          phone: "083897685406",
-        });
+        // Check if cart is empty after loading
+        if (cart.length === 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "Cart is Empty",
+            text: "Please add items to cart first",
+          }).then(() => {
+            navigate("/products");
+          });
+        }
+      }, 100); // Small delay to let useCart load from localStorage
 
-        setOrderData({
-          orderId: "ORD-" + Date.now(),
-          items: [
-            {
-              id: 1,
-              name: "Samsung Galaxy S24 Ultra",
-              price: 15999000,
-              quantity: 1,
-              image:
-                "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=300&h=300&fit=crop",
-            },
-            {
-              id: 2,
-              name: "iPhone 15 Pro Max",
-              price: 19999000,
-              quantity: 2,
-              image:
-                "https://images.unsplash.com/photo-1592286927505-eb0e1b9c6c90?w=300&h=300&fit=crop",
-            },
-          ],
-          totalPrice: 55997000,
-          createdAt: new Date().toISOString(),
-        });
+      return () => clearTimeout(timer);
+    }
+  }, [cart, initialCheckDone, navigate]);
 
-        setLoading(false);
-      }, 500);
-    };
-
-    fetchCheckoutData();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -135,8 +84,8 @@ export default function CheckoutPage() {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Nama harus diisi";
+    if (!formData.customerName.trim()) {
+      newErrors.customerName = "Nama harus diisi";
     }
 
     if (!formData.address.trim()) {
@@ -152,30 +101,37 @@ export default function CheckoutPage() {
     return newErrors;
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const generateWhatsAppMessage = () => {
-    if (!orderData) return "";
-
-    const itemsList = orderData.items
+  const generateWhatsAppMessage = (orderId) => {
+    const itemsList = cart
       .map(
         (item, index) =>
-          `${index + 1}. ${item.name}\n   Qty: ${item.quantity} x ${formatPrice(item.price)} = ${formatPrice(item.price * item.quantity)}`,
+          `${index + 1}. ${item.name}\n   Qty: ${item.quantity} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.quantity)}`
       )
       .join("\n\n");
 
-    const message = `Halo Admin, saya ${formData.name}
-    Saya ingin konfirmasi order dengan ID : ${orderData.orderId}`;
+    const message = `Halo Admin, saya ${formData.customerName}
+
+Saya ingin konfirmasi order dengan:
+Order ID: ${orderId}
+
+Detail Pesanan:
+${itemsList}
+
+Total: ${formatRupiah(getCartTotal())}
+
+Alamat Pengiriman:
+${formData.address}
+
+No. Telepon: ${formData.phone}
+
+${formData.notes ? `Catatan: ${formData.notes}` : ""}
+
+Terima kasih!`;
+
     return encodeURIComponent(message);
   };
 
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault();
 
     const newErrors = validate();
@@ -185,49 +141,107 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Redirect ke WhatsApp
-    const whatsappNumber = "6283897685406"; // Ganti dengan nomor admin
-    const message = generateWhatsAppMessage();
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+    if (cart.length === 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Cart is Empty",
+        text: "Please add items to cart first",
+      });
+      return;
+    }
 
-    // ============================================
-    // TODO: SAVE ORDER TO DATABASE
-    // ============================================
-    /*
-    const token = localStorage.getItem("token");
-    await fetch("https://your-api.com/api/orders", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        orderId: orderData.orderId,
-        items: orderData.items,
-        customerInfo: formData,
-        totalPrice: orderData.totalPrice,
-        status: "pending"
-      })
-    });
-    */
-    // ============================================
+    try {
+      setLoading(true);
+
+      // Prepare order items for API
+      const items = cart.map((item) => ({
+        product: item.productId,
+        quantity: item.quantity,
+      }));
+
+      // Create order via API
+      const { data } = await api.post("/orders", {
+        items,
+        customerName: formData.customerName,
+        address: formData.address,
+        phone: formData.phone,
+        notes: formData.notes,
+        paymentMethod: formData.paymentMethod,
+      });
+
+      // Clear cart after successful order
+      clearCart();
+
+      // Show success message
+      await Swal.fire({
+        icon: "success",
+        title: "Order Created!",
+        html: `
+          <p>Order ID: <strong>${data.data.orderId}</strong></p>
+          <p>Total: <strong>${formatRupiah(data.data.totalAmount)}</strong></p>
+          <p>Status: <strong>${data.data.status}</strong></p>
+        `,
+        confirmButtonText: "OK",
+      });
+
+      // Open WhatsApp if payment method is whatsapp
+      if (formData.paymentMethod === "whatsapp") {
+        const whatsappNumber = "6283897685406"; // Admin WhatsApp number
+        const message = generateWhatsAppMessage(data.data.orderId);
+        window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+      }
+
+      // Navigate to check orders page
+      navigate("/check-orders");
+    } catch (error) {
+      console.error("Checkout error:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Checkout Failed",
+        text: error.response?.data?.message || "Failed to create order. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Show loading while cart is being loaded from localStorage
   if (loading) {
     return (
-      <div className="checkout-loading">
-        <h2>Preparing checkout...</h2>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "400px",
+          gap: "1rem",
+        }}
+      >
+        <Loader2 className="spin" size={48} color="#f97316" />
+        <p style={{ color: "#6b7280" }}>Loading checkout...</p>
       </div>
     );
   }
 
-  if (!orderData || orderData.items.length === 0) {
+  if (cart.length === 0) {
     return (
-      <div className="checkout-empty">
-        <ShoppingBag size={64} />
+      <div
+        className="checkout-empty"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "400px",
+          gap: "1rem",
+        }}
+      >
+        <ShoppingBag size={64} color="#6b7280" />
         <h2>No items to checkout</h2>
-        <p>Please add items to your cart first</p>
-        <Link to="/products/lists" className="btn primary">
+        <p style={{ color: "#6b7280" }}>Please add items to your cart first</p>
+        <Link to="/products" className="btn primary">
           Browse Products
         </Link>
       </div>
@@ -238,7 +252,7 @@ export default function CheckoutPage() {
     <div className="checkout-container">
       <button className="back-button" onClick={() => navigate(-1)}>
         <ArrowLeft size={20} />
-        <span>Back to Cart</span>
+        <span>Back</span>
       </button>
 
       <h1>Checkout</h1>
@@ -248,22 +262,28 @@ export default function CheckoutPage() {
         <div className="checkout-order">
           <div className="order-header">
             <h2>Order Summary</h2>
-            <span className="order-id">Order ID: {orderData.orderId}</span>
+            <span className="order-id">{cart.length} item(s)</span>
           </div>
 
           <div className="order-items">
-            {orderData.items.map((item) => (
-              <div key={item.id} className="order-item">
-                <img src={item.image} alt={item.name} />
+            {cart.map((item) => (
+              <div key={item.productId} className="order-item">
+                <img
+                  src={item.image || "https://via.placeholder.com/100"}
+                  alt={item.name}
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/100?text=No+Image";
+                  }}
+                />
                 <div className="order-item-details">
                   <h3>{item.name}</h3>
                   <div className="order-item-pricing">
                     <span className="quantity">Qty: {item.quantity}</span>
-                    <span className="price">{formatPrice(item.price)}</span>
+                    <span className="price">{formatRupiah(item.price)}</span>
                   </div>
                   <div className="order-item-total">
                     Subtotal:{" "}
-                    <strong>{formatPrice(item.price * item.quantity)}</strong>
+                    <strong>{formatRupiah(item.price * item.quantity)}</strong>
                   </div>
                 </div>
               </div>
@@ -273,7 +293,7 @@ export default function CheckoutPage() {
           <div className="order-total">
             <div className="total-row">
               <span>Total</span>
-              <span>{formatPrice(orderData.totalPrice)}</span>
+              <span>{formatRupiah(getCartTotal())}</span>
             </div>
           </div>
         </div>
@@ -285,10 +305,10 @@ export default function CheckoutPage() {
           <form onSubmit={handleCheckout}>
             <Input
               label="Nama Lengkap"
-              name="name"
-              value={formData.name}
+              name="customerName"
+              value={formData.customerName}
               onChange={handleChange}
-              error={errors.name}
+              error={errors.customerName}
               placeholder="Masukkan nama lengkap"
               required
             />
@@ -313,24 +333,71 @@ export default function CheckoutPage() {
               placeholder="08xxxxxxxxxx"
               required
             />
+
             <Textarea
               style={{ height: "120px" }}
-              label="Catatan pembeli"
+              label="Catatan Pembeli (Opsional)"
               onChange={handleChange}
-              name="note"
-              placeholder="Tolong barangnya di anuin dan dianukan"
+              name="notes"
+              value={formData.notes}
+              placeholder="Contoh: Tolong barangnya di anuin dan dianukan"
             />
-            <div className="checkout-info">
-              <MessageCircle size={20} />
-              <p>
-                Setelah klik tombol di bawah, Anda akan diarahkan ke WhatsApp
-                untuk konfirmasi pesanan dengan admin.
-              </p>
+
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
+                Metode Pembayaran
+              </label>
+              <select
+                name="paymentMethod"
+                value={formData.paymentMethod}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid var(--color-border)",
+                  fontSize: "16px",
+                }}
+              >
+                <option value="whatsapp">WhatsApp (Konfirmasi via WA)</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="cod">Cash on Delivery (COD)</option>
+              </select>
             </div>
 
-            <button type="submit" className="btn primary">
-              <MessageCircle size={20} />
-              <span>Checkout via WhatsApp</span>
+            {formData.paymentMethod === "whatsapp" && (
+              <div className="checkout-info">
+                <MessageCircle size={20} />
+                <p>
+                  Setelah klik tombol di bawah, Anda akan diarahkan ke WhatsApp
+                  untuk konfirmasi pesanan dengan admin.
+                </p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn primary"
+              disabled={loading}
+              style={{ width: "100%" }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="spin" size={20} />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  {formData.paymentMethod === "whatsapp" ? (
+                    <>
+                      <MessageCircle size={20} />
+                      <span>Checkout via WhatsApp</span>
+                    </>
+                  ) : (
+                    <span>Place Order</span>
+                  )}
+                </>
+              )}
             </button>
           </form>
         </div>
