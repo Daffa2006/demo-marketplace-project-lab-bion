@@ -6,6 +6,7 @@ import EmptyState from "../Components/EmptyState";
 import api from "../lib/axios";
 import Swal from "sweetalert2";
 import { Loader2 } from "lucide-react";
+import { formatRupiah } from "../helpers";
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -59,23 +60,20 @@ export default function HomePage() {
     }
   };
 
-  const formatRupiah = (price) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
   return (
     <div>
       {/* Featured Products Section */}
       <h2 style={{ margin: "32px 0px" }}>Featured Products</h2>
 
       {loadingFeatured ? (
-        <div className="loading-state" style={{ textAlign: "center", padding: "3rem" }}>
+        <div
+          className="loading-state"
+          style={{ textAlign: "center", padding: "3rem" }}
+        >
           <Loader2 className="spin" size={48} style={{ margin: "0 auto" }} />
-          <p style={{ marginTop: "1rem", color: "#6b7280" }}>Loading featured products...</p>
+          <p style={{ marginTop: "1rem", color: "#6b7280" }}>
+            Loading featured products...
+          </p>
         </div>
       ) : featuredProducts.length > 0 ? (
         <div className="bento-grid">
@@ -90,7 +88,8 @@ export default function HomePage() {
                 src={product.images?.[0] || "https://via.placeholder.com/400"}
                 alt={product.name}
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/400?text=No+Image";
+                  e.target.src =
+                    "https://via.placeholder.com/400?text=No+Image";
                 }}
               />
               <figcaption>
@@ -108,7 +107,14 @@ export default function HomePage() {
       )}
 
       {/* Newest Products Section */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "32px 0px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          margin: "32px 0px",
+        }}
+      >
         <h2 style={{ margin: 0 }}>Newest Products</h2>
         <Link to="/products" className="btn secondary">
           View All Products
@@ -116,9 +122,14 @@ export default function HomePage() {
       </div>
 
       {loadingNewest ? (
-        <div className="loading-state" style={{ textAlign: "center", padding: "3rem" }}>
+        <div
+          className="loading-state"
+          style={{ textAlign: "center", padding: "3rem" }}
+        >
           <Loader2 className="spin" size={48} style={{ margin: "0 auto" }} />
-          <p style={{ marginTop: "1rem", color: "#6b7280" }}>Loading newest products...</p>
+          <p style={{ marginTop: "1rem", color: "#6b7280" }}>
+            Loading newest products...
+          </p>
         </div>
       ) : newestProducts.length > 0 ? (
         <div className="products-grid">

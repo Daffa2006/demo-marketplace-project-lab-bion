@@ -12,6 +12,8 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirm_password: "",
+    phone: "",
+    address: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -37,17 +39,17 @@ export default function RegisterPage() {
         text: "Account berhasil dibuat",
       });
 
-      // Simpan token untuk auto-login
       localStorage.setItem("online_marketplace_access_token", data.data.token);
 
-      // Simpan user data untuk ditampilkan di navbar
-      localStorage.setItem("online_marketplace_user", JSON.stringify({
-        name: data.data.user.name,
-        email: data.data.user.email,
-        role: data.data.user.role,
-      }));
+      localStorage.setItem(
+        "online_marketplace_user",
+        JSON.stringify({
+          name: data.data.user.name,
+          email: data.data.user.email,
+          role: data.data.user.role,
+        }),
+      );
 
-      // Auto-login: redirect ke home page
       navigate("/");
     } catch (error) {
       let message = "Terjadi kesalahan";
@@ -91,6 +93,20 @@ export default function RegisterPage() {
         />
 
         <Input
+          label="Phone Number"
+          name="phone"
+          value={form.phone}
+          onChange={handleChange}
+        />
+
+        <Input
+          label="Address"
+          name="address"
+          value={form.address}
+          onChange={handleChange}
+        />
+
+        <Input
           label="Password"
           name="password"
           type="password"
@@ -114,7 +130,10 @@ export default function RegisterPage() {
 
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
           Sudah punya akun?{" "}
-          <Link to="/login" style={{ color: "var(--primary)", fontWeight: "600" }}>
+          <Link
+            to="/login"
+            style={{ color: "var(--primary)", fontWeight: "600" }}
+          >
             Login di sini
           </Link>
         </p>

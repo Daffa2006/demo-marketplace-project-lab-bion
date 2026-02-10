@@ -93,8 +93,9 @@ export default function ProductListPage() {
       {/* Category Filter */}
       <div className="category-filter">
         <button
-          className={`category-btn ${selectedCategory === "all" ? "active" : ""
-            }`}
+          className={`category-btn ${
+            selectedCategory === "all" ? "active" : ""
+          }`}
           style={{
             borderColor: "#6b7280",
             backgroundColor:
@@ -109,8 +110,9 @@ export default function ProductListPage() {
         {categories.map((cat) => (
           <button
             key={cat.name}
-            className={`category-btn ${selectedCategory === cat.name ? "active" : ""
-              }`}
+            className={`category-btn ${
+              selectedCategory === cat.name ? "active" : ""
+            }`}
             style={{
               borderColor: cat.color,
               backgroundColor:
@@ -127,9 +129,14 @@ export default function ProductListPage() {
       {/* Products */}
       <div className="products-container">
         {loading ? (
-          <div className="loading-state" style={{ textAlign: "center", padding: "3rem" }}>
+          <div
+            className="loading-state"
+            style={{ textAlign: "center", padding: "3rem" }}
+          >
             <Loader2 className="spin" size={48} style={{ margin: "0 auto" }} />
-            <p style={{ marginTop: "1rem", color: "#6b7280" }}>Loading products...</p>
+            <p style={{ marginTop: "1rem", color: "#6b7280" }}>
+              Loading products...
+            </p>
           </div>
         ) : products.length > 0 ? (
           <>
@@ -150,14 +157,17 @@ export default function ProductListPage() {
 
             {/* Pagination */}
             {pagination.pages > 1 && (
-              <div className="pagination" style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "0.5rem",
-                marginTop: "2rem",
-                flexWrap: "wrap"
-              }}>
+              <div
+                className="pagination"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginTop: "2rem",
+                  flexWrap: "wrap",
+                }}
+              >
                 <button
                   className="btn secondary"
                   onClick={() => handlePageChange(pagination.page - 1)}
@@ -167,15 +177,24 @@ export default function ProductListPage() {
                   Previous
                 </button>
 
-                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                  }}
+                >
+                  {Array.from(
+                    { length: pagination.pages },
+                    (_, i) => i + 1,
+                  ).map((page) => (
                     <button
                       key={page}
                       className={`btn ${pagination.page === page ? "primary" : "secondary"}`}
                       onClick={() => handlePageChange(page)}
                       style={{
                         minWidth: "40px",
-                        padding: "0.5rem"
+                        padding: "0.5rem",
                       }}
                     >
                       {page}
@@ -195,14 +214,17 @@ export default function ProductListPage() {
             )}
 
             {/* Pagination Info */}
-            <div style={{
-              textAlign: "center",
-              marginTop: "1rem",
-              color: "#6b7280",
-              fontSize: "0.875rem"
-            }}>
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: "1rem",
+                color: "#6b7280",
+                fontSize: "0.875rem",
+              }}
+            >
               Showing {products.length} of {pagination.total} products
-              {pagination.pages > 1 && ` (Page ${pagination.page} of ${pagination.pages})`}
+              {pagination.pages > 1 &&
+                ` (Page ${pagination.page} of ${pagination.pages})`}
             </div>
           </>
         ) : (

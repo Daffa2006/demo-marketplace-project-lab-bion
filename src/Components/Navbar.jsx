@@ -4,6 +4,7 @@ import logo from "../assets/ai-generated-black.png";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { getInitials } from "../helpers";
 import { useAuth } from "../hooks/useAuth";
+import AdminOnly from "../routes/AdminOnly";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -49,7 +50,11 @@ export default function Navbar() {
         <nav className={isOpen ? "open" : ""}>
           {isAuthenticated && (
             <>
-              <Link to="/" className="header-link" onClick={() => setIsOpen(false)}>
+              <Link
+                to="/"
+                className="header-link"
+                onClick={() => setIsOpen(false)}
+              >
                 Home
               </Link>
               <Link
@@ -59,23 +64,24 @@ export default function Navbar() {
               >
                 List product
               </Link>
-              <Link
-                to="/products/create"
-                className="header-link"
-                onClick={() => setIsOpen(false)}
-              >
-                Create product
-              </Link>
-              <Link
-                to="/check-orders"
-                className="header-link"
-                onClick={() => setIsOpen(false)}
-              >
-                Check Orders
-              </Link>
+              <AdminOnly>
+                <Link
+                  to="/products/create"
+                  className="header-link"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Create product
+                </Link>
+                <Link
+                  to="/check-orders"
+                  className="header-link"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Check Orders
+                </Link>
+              </AdminOnly>
             </>
           )}
-
 
           {/* Mobile user profile */}
           {isAuthenticated ? (
@@ -98,10 +104,7 @@ export default function Navbar() {
               >
                 Profile
               </Link>
-              <Link
-                className="mobile-menu-item logout"
-                onClick={handleLogout}
-              >
+              <Link className="mobile-menu-item logout" onClick={handleLogout}>
                 Logout
               </Link>
             </>
@@ -140,15 +143,15 @@ export default function Navbar() {
                     </div>
                   </li>
                   <li>
-                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
                       Profile
                     </Link>
                   </li>
                   <li>
-                    <Link
-                      className="logout"
-                      onClick={handleLogout}
-                    >
+                    <Link className="logout" onClick={handleLogout}>
                       Logout
                     </Link>
                   </li>
@@ -156,7 +159,11 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" className="btn primary" style={{ marginRight: "1rem" }}>
+            <Link
+              to="/login"
+              className="btn primary"
+              style={{ marginRight: "1rem" }}
+            >
               Login
             </Link>
           )}

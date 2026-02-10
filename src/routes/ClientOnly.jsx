@@ -1,21 +1,5 @@
-function getUserFromToken() {
-  try {
-    const token = localStorage.getItem("online_marketplace_access_token");
-
-    if (!token) return null;
-
-    const payload = JSON.parse(atob(token.split(".")[1]));
-
-    if (payload.exp * 1000 < Date.now()) return null;
-
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
 export default function ClientOnly({ children }) {
-  const user = getUserFromToken();
+  const user = JSON.parse(localStorage.getItem("online_marketplace_user"));
 
   if (user?.role !== "user") return null;
 
