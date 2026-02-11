@@ -1,7 +1,14 @@
 // pages/ProductDetailPage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router";
-import { ShoppingCart, CreditCard, ArrowLeft, Edit, Loader2, User } from "lucide-react";
+import {
+  ShoppingCart,
+  CreditCard,
+  ArrowLeft,
+  Edit,
+  Loader2,
+  User,
+} from "lucide-react";
 import { formatRupiah } from "../helpers";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
@@ -42,7 +49,8 @@ export default function ProductDetailPage() {
     } catch (error) {
       console.error("Fetch product error:", error);
 
-      const errorMessage = error.response?.data?.message || "Failed to load product";
+      const errorMessage =
+        error.response?.data?.message || "Failed to load product";
 
       Swal.fire({
         icon: "error",
@@ -126,14 +134,17 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="product-detail-loading" style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "400px",
-        gap: "1rem"
-      }}>
+      <div
+        className="product-detail-loading"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "400px",
+          gap: "1rem",
+        }}
+      >
         <Loader2 className="spin" size={48} />
         <h2>Loading product...</h2>
       </div>
@@ -142,10 +153,13 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="product-detail-error" style={{
-        textAlign: "center",
-        padding: "3rem"
-      }}>
+      <div
+        className="product-detail-error"
+        style={{
+          textAlign: "center",
+          padding: "3rem",
+        }}
+      >
         <h2>Product not found</h2>
         <button className="btn primary" onClick={() => navigate("/products")}>
           Back to Products
@@ -167,11 +181,11 @@ export default function ProductDetailPage() {
         <div className="product-gallery">
           <figure className="main-image">
             <img
-              src={product.images?.[selectedImage] || "https://via.placeholder.com/800?text=No+Image"}
+              src={
+                import.meta.env.VITE_BACKEND_BASE_URL +
+                product.images?.[selectedImage]
+              }
               alt={`${product.name} - Image ${selectedImage + 1}`}
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/800?text=No+Image";
-              }}
             />
             {product.isFeatured && (
               <span className="featured-badge">Featured</span>
@@ -183,13 +197,10 @@ export default function ProductDetailPage() {
               {product.images.map((image, index) => (
                 <img
                   key={index}
-                  src={image}
+                  src={import.meta.env.VITE_BACKEND_BASE_URL + image}
                   alt={`${product.name} thumbnail ${index + 1}`}
                   className={selectedImage === index ? "active" : ""}
                   onClick={() => setSelectedImage(index)}
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/100?text=No+Image";
-                  }}
                 />
               ))}
             </div>
@@ -200,7 +211,10 @@ export default function ProductDetailPage() {
         <div className="product-info">
           <div className="product-header">
             <h1 className="product-name">{product.name}</h1>
-            <Link to={`/products/edit?id=${product._id}`} className="edit-button">
+            <Link
+              to={`/products/edit?id=${product._id}`}
+              className="edit-button"
+            >
               <Edit size={20} />
             </Link>
           </div>
@@ -232,13 +246,22 @@ export default function ProductDetailPage() {
             {product.seller && (
               <div className="detail-item">
                 <span className="detail-label">
-                  <User size={16} style={{ display: "inline", marginRight: "0.25rem" }} />
+                  <User
+                    size={16}
+                    style={{ display: "inline", marginRight: "0.25rem" }}
+                  />
                   Seller
                 </span>
                 <span className="detail-value">
                   {product.seller.name}
                   {product.seller.email && (
-                    <span style={{ fontSize: "0.875rem", color: "#6b7280", display: "block" }}>
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "#6b7280",
+                        display: "block",
+                      }}
+                    >
                       {product.seller.email}
                     </span>
                   )}
@@ -252,8 +275,7 @@ export default function ProductDetailPage() {
                 <span className="detail-value">
                   {product.ratings.average > 0
                     ? `⭐ ${product.ratings.average.toFixed(1)} (${product.ratings.count} reviews)`
-                    : "No ratings yet"
-                  }
+                    : "No ratings yet"}
                 </span>
               </div>
             )}
@@ -320,13 +342,21 @@ export default function ProductDetailPage() {
               </button>
             </div>
           ) : (
-            <div className="login-prompt" style={{
-              padding: "1.5rem",
-              backgroundColor: "var(--color-muted-light)",
-              borderRadius: "8px",
-              textAlign: "center"
-            }}>
-              <p style={{ margin: "0 0 1rem 0", color: "var(--color-foreground)" }}>
+            <div
+              className="login-prompt"
+              style={{
+                padding: "1.5rem",
+                backgroundColor: "var(--color-muted-light)",
+                borderRadius: "8px",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0 0 1rem 0",
+                  color: "var(--color-foreground)",
+                }}
+              >
                 Please login to purchase this product
               </p>
               <button
