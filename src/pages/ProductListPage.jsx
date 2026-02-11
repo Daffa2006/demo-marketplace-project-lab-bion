@@ -19,13 +19,16 @@ export default function ProductListPage() {
   });
 
   const categories = [
-    { value: "", label: "Pilih kategori" },
-    { value: "daily", label: "Daily" },
-    { value: "formal", label: "Formal" },
-    { value: "sport", label: "Sport" },
-    { value: "night", label: "Night" },
-    { value: "body_mist", label: "Body mist" },
-    { value: "other", label: "Other" },
+    { label: "Daily", name: "daily", color: "oklch(60.6% 0.25 292.717)" },
+    { label: "Formal", name: "formal", color: "oklch(76.9% 0.188 70.08)" },
+    { label: "Sport", name: "sport", color: "oklch(72.3% 0.219 149.579)" },
+    { label: "Night", name: "night", color: "oklch(60.9% 0.126 221.723)" },
+    {
+      label: "Body Mist",
+      name: "body_mist",
+      color: "oklch(55.3% 0.013 58.071)",
+    },
+    { label: "Other", name: "other", color: "oklch(26.8% 0.007 34.298)" },
   ];
 
   async function fetchProducts(page = 1) {
@@ -122,7 +125,7 @@ export default function ProductListPage() {
             }}
             onClick={() => handleCategoryChange(cat.name)}
           >
-            {cat.name}
+            {cat.label}
           </button>
         ))}
       </div>

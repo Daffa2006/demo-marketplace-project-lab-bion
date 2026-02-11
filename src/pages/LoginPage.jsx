@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Input from "../Components/Input";
 import api from "../lib/axios";
 import Swal from "sweetalert2";
@@ -6,7 +6,15 @@ import { useNavigate, Link } from "react-router";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
+  useEffect(() => {
+    Swal.fire({
+      title: "INFORMASI PENTING",
+      html: `UNTUK LOGIN SEBAGAI ADMIN <br/>
+    Email: <strong>daffa.farid@binus.ac.id</strong> <br/>
+    Password: <strong>admin123</strong>`,
+      icon: "info",
+    });
+  }, []);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -33,11 +41,14 @@ export default function LoginPage() {
       localStorage.setItem("online_marketplace_access_token", data.data.token);
 
       // Simpan user data untuk ditampilkan di navbar
-      localStorage.setItem("online_marketplace_user", JSON.stringify({
-        name: data.data.user.name,
-        email: data.data.user.email,
-        role: data.data.user.role,
-      }));
+      localStorage.setItem(
+        "online_marketplace_user",
+        JSON.stringify({
+          name: data.data.user.name,
+          email: data.data.user.email,
+          role: data.data.user.role,
+        }),
+      );
 
       Swal.fire({
         icon: "success",
@@ -94,7 +105,10 @@ export default function LoginPage() {
 
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
           Belum punya akun?{" "}
-          <Link to="/register" style={{ color: "var(--primary)", fontWeight: "600" }}>
+          <Link
+            to="/register"
+            style={{ color: "var(--primary)", fontWeight: "600" }}
+          >
             Daftar di sini
           </Link>
         </p>
