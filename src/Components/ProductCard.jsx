@@ -18,7 +18,7 @@ export default function ProductCard({
       <figure className="product-card">
         <img
           className="product-content"
-          src={image}
+          src={import.meta.env.VITE_BACKEND_BASE_URL + image}
           alt={"Foto produk" + name}
         />
         <div className="product-information">

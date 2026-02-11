@@ -19,12 +19,13 @@ export default function ProductListPage() {
   });
 
   const categories = [
-    { name: "electronics", color: "#3b82f6" },
-    { name: "fashion", color: "#6366f1" },
-    { name: "food", color: "#22c55e" },
-    { name: "books", color: "#f43f5e" },
-    { name: "sports", color: "#f59e0b" },
-    { name: "toys", color: "#8b5cf6" },
+    { value: "", label: "Pilih kategori" },
+    { value: "daily", label: "Daily" },
+    { value: "formal", label: "Formal" },
+    { value: "sport", label: "Sport" },
+    { value: "night", label: "Night" },
+    { value: "body_mist", label: "Body mist" },
+    { value: "other", label: "Other" },
   ];
 
   async function fetchProducts(page = 1) {

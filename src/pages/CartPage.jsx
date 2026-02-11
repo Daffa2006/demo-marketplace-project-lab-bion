@@ -7,7 +7,13 @@ import Swal from "sweetalert2";
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { cart, updateQuantity, removeFromCart, getCartTotal, getCartItemsCount } = useCart();
+  const {
+    cart,
+    updateQuantity,
+    removeFromCart,
+    getCartTotal,
+    getCartItemsCount,
+  } = useCart();
 
   const handleUpdateQuantity = (productId, newQuantity, stock) => {
     if (newQuantity < 1) {
@@ -106,11 +112,8 @@ export default function CartPage() {
                 className="cart-item-image"
               >
                 <img
-                  src={item.image || "https://via.placeholder.com/150"}
+                  src={import.meta.env.VITE_BACKEND_BASE_URL + item.image}
                   alt={item.name}
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/150?text=No+Image";
-                  }}
                 />
               </Link>
 
@@ -134,7 +137,7 @@ export default function CartPage() {
                         handleUpdateQuantity(
                           item.productId,
                           item.quantity - 1,
-                          item.stock
+                          item.stock,
                         )
                       }
                       disabled={item.quantity <= 1}
@@ -149,7 +152,7 @@ export default function CartPage() {
                         handleUpdateQuantity(
                           item.productId,
                           parseInt(e.target.value) || 1,
-                          item.stock
+                          item.stock,
                         )
                       }
                       min="1"
@@ -161,7 +164,7 @@ export default function CartPage() {
                         handleUpdateQuantity(
                           item.productId,
                           item.quantity + 1,
-                          item.stock
+                          item.stock,
                         )
                       }
                       disabled={item.quantity >= item.stock}
