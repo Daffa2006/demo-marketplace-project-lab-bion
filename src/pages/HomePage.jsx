@@ -79,18 +79,16 @@ export default function HomePage() {
         <div className="bento-grid">
           {featuredProducts.slice(0, 5).map((product) => (
             <Link
-              to={`/products/detail?id=${product._id}`}
+              to={`/products/${product._id}`}
               key={product._id}
               className="bento-item"
               style={{ gridArea: product.area }}
             >
               <img
-                src={product.images?.[0] || "https://via.placeholder.com/400"}
+                src={
+                  import.meta.env.VITE_BACKEND_BASE_URL + product.images?.[0]
+                }
                 alt={product.name}
-                onError={(e) => {
-                  e.target.src =
-                    "https://via.placeholder.com/400?text=No+Image";
-                }}
               />
               <figcaption>
                 <h3>{product.name}</h3>
@@ -141,7 +139,7 @@ export default function HomePage() {
               stock={product.stock}
               price={product.price}
               category={product.category}
-              image={product.images?.[0]}
+              image={mport.meta.env.VITE_BACKEND_BASE_URL + product.images?.[0]}
               isFeatured={product.isFeatured}
             />
           ))}

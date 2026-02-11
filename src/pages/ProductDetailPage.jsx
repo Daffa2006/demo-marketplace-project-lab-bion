@@ -1,6 +1,6 @@
 // pages/ProductDetailPage.jsx
 import { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router";
+import { useNavigate, Link, useParams } from "react-router";
 import {
   ShoppingCart,
   CreditCard,
@@ -14,10 +14,10 @@ import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
 import api from "../lib/axios";
 import Swal from "sweetalert2";
+import AdminOnly from "../routes/AdminOnly";
 
 export default function ProductDetailPage() {
-  const [searchParams] = useSearchParams();
-  const id = searchParams.get("id");
+  const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
@@ -211,12 +211,14 @@ export default function ProductDetailPage() {
         <div className="product-info">
           <div className="product-header">
             <h1 className="product-name">{product.name}</h1>
-            <Link
-              to={`/products/edit?id=${product._id}`}
-              className="edit-button"
-            >
-              <Edit size={20} />
-            </Link>
+            <AdminOnly>
+              <Link
+                to={`/products/edit/${product._id}`}
+                className="edit-button"
+              >
+                <Edit size={20} />
+              </Link>
+            </AdminOnly>
           </div>
 
           <div className="product-price-section">

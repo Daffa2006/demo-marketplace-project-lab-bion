@@ -1,109 +1,102 @@
 // pages/EditProductPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
+import Swal from "sweetalert2";
+import api from "../lib/axios";
 import Input from "../Components/Input";
 import Textarea from "../Components/Textarea";
 import Checkbox from "../Components/Checkbox";
 import FileInput from "../Components/FileInput";
 import Select from "../Components/Select";
+
 export default function EditProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const resetFormRef = useRef(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    stock: "",
-    category: "",
-    isFeatured: false,
-    description: "",
-    images: [],
-    existingImages: [],
-  });
-
+  const [formData, setFormData] = useState(null);
+  const [originalData, setOriginalData] = useState(null); // ✅ TAMBAH: Simpan data asli
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletedImages, setDeletedImages] = useState([]);
 
   const categories = [
     { value: "", label: "Pilih kategori" },
-    { value: "electronics", label: "Electronics" },
-    { value: "fashion", label: "Fashion" },
-    { value: "food", label: "Food & Beverage" },
-    { value: "books", label: "Books" },
-    { value: "toys", label: "Toys" },
+    { value: "daily", label: "Daily" },
+    { value: "formal", label: "Formal" },
+    { value: "sport", label: "Sport" },
+    { value: "night", label: "Night" },
+    { value: "body_mist", label: "Body mist" },
+    { value: "other", label: "Other" },
   ];
 
   // Fetch product data saat component mount
   useEffect(() => {
     const fetchProduct = async () => {
-      setLoading(true);
-
-      // ============================================
-      // TODO: FETCH API - Replace mock data dengan API call
-      // ============================================
-      /*
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`https://your-api.com/api/products/${id}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
+        const response = await api.get(`/products/${id}`);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch product");
-        }
-
-        const data = await response.json();
-
-        setFormData({
-          name: data.name,
-          price: data.price,
-          stock: data.stock,
-          category: data.category,
-          isFeatured: data.isFeatured,
-          description: data.description,
+        const productData = {
+          ...response.data.data,
           images: [],
-          existingImages: data.images || [] // Array of image URLs dari backend
-        });
+          existingImages: response.data.data.images || [],
+        };
+
+        setFormData(productData);
+        setOriginalData(productData); // ✅ Simpan data asli
 
         setLoading(false);
       } catch (error) {
         console.error("Error fetching product:", error);
-        setErrors({ fetch: "Failed to load product data" });
-        setLoading(false);
-      }
-      */
-      // ============================================
-      // END TODO
-      // ============================================
 
-      // MOCK DATA - Hapus ini saat sudah pakai API
-      setTimeout(() => {
-        setFormData({
-          name: "Samsung Galaxy S24 Ultra",
-          price: "15999000",
-          stock: "25",
-          category: "electronics",
-          isFeatured: true,
-          description:
-            "Flagship smartphone dengan kamera 200MP, layar Dynamic AMOLED 2X, dan prosesor Snapdragon 8 Gen 3 terbaru.",
-          images: [],
-          existingImages: [
-            "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=300&h=300&fit=crop",
-            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&h=300&fit=crop",
-            "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=300&h=300&fit=crop",
-          ],
-        });
+        let errorMessage = "Failed to load product data";
+
+        if (error.response?.status === 404) {
+          errorMessage = "Product not found";
+        } else if (error.response?.status === 401) {
+          errorMessage = "Unauthorized. Please login again.";
+          navigate("/login");
+          return;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+
+        setErrors({ fetch: errorMessage });
         setLoading(false);
-      }, 500); // Simulasi loading
+
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Error!",
+          text: errorMessage,
+        });
+      }
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, navigate]);
+
+  // Function untuk check apakah ada perubahan
+  const hasChanges = () => {
+    if (!formData || !originalData) return false;
+
+    const fieldChanged =
+      formData.name?.trim() !== originalData.name?.trim() ||
+      Number(formData.price) !== Number(originalData.price) ||
+      Number(formData.stock) !== Number(originalData.stock) ||
+      formData.category !== originalData.category ||
+      Boolean(formData.isFeatured) !== Boolean(originalData.isFeatured) ||
+      formData.description?.trim() !== originalData.description?.trim();
+
+    // Check new images
+    const hasNewImages = formData.images && formData.images.length > 0;
+
+    // Check deleted images
+    const hasDeletedImages = deletedImages.length > 0;
+
+    return fieldChanged || hasNewImages || hasDeletedImages;
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -112,7 +105,7 @@ export default function EditProductPage() {
     if (type === "checkbox") {
       finalValue = checked;
     } else if (type === "file") {
-      finalValue = files || value;
+      finalValue = files;
     } else {
       finalValue = value;
     }
@@ -174,6 +167,17 @@ export default function EditProductPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // ✅ TAMBAH: Check jika tidak ada perubahan
+    if (!hasChanges()) {
+      Swal.fire({
+        position: "top",
+        icon: "info",
+        title: "No Changes",
+        text: "You haven't made any changes to update.",
+      });
+      return;
+    }
+
     const newErrors = validate();
 
     if (Object.keys(newErrors).length > 0) {
@@ -181,10 +185,8 @@ export default function EditProductPage() {
       return;
     }
 
-    // ============================================
-    // TODO: SUBMIT API - Replace console.log dengan API call
-    // ============================================
-    /*
+    setIsSubmitting(true);
+
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
     formDataToSend.append("price", formData.price);
@@ -211,54 +213,92 @@ export default function EditProductPage() {
     });
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`https://your-api.com/api/products/${id}`, {
-        method: "PUT",
+      const response = await api.put(`/products/${id}`, formDataToSend, {
         headers: {
-          "Authorization": `Bearer ${token}`
-          // Jangan set Content-Type untuk FormData, browser akan set otomatis
+          "Content-Type": "multipart/form-data",
         },
-        body: formDataToSend
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update product");
-      }
+      console.log("Product updated:", response.data);
 
-      const result = await response.json();
-      console.log("Product updated:", result);
+      // Success notification
+      await Swal.fire({
+        position: "top",
+        icon: "success",
+        title: "Product Updated!",
+        text: "Your product has been successfully updated.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
 
-      // Redirect ke detail page
+      // Redirect ke detail page atau products list
       navigate(`/products/${id}`);
     } catch (error) {
       console.error("Error updating product:", error);
-      setErrors({ submit: "Failed to update product. Please try again." });
+
+      // Handle validation errors dari backend
+      if (error.response?.status === 400 && error.response?.data?.errors) {
+        const backendErrors = {};
+        error.response.data.errors.forEach((err) => {
+          backendErrors[err.field] = err.message;
+        });
+        setErrors(backendErrors);
+
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Validation Error",
+          text: "Please check the form and try again.",
+        });
+      } else if (error.response?.status === 404) {
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Product Not Found",
+          text: "The product you're trying to update doesn't exist.",
+        });
+        navigate("/products/lists");
+      } else if (error.response?.status === 401) {
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Unauthorized",
+          text: "Please login again.",
+        });
+        navigate("/login");
+      } else {
+        // Generic error
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Error!",
+          text:
+            error.response?.data?.message ||
+            "Failed to update product. Please try again.",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-    */
-    // ============================================
-    // END TODO
-    // ============================================
-
-    // MOCK SUBMIT - Hapus ini saat sudah pakai API
-    console.log("=== FORM SUBMITTED ===");
-    console.log("Product ID:", id);
-    console.log("Form Data:", {
-      name: formData.name,
-      price: formData.price,
-      stock: formData.stock,
-      category: formData.category,
-      isFeatured: formData.isFeatured,
-      description: formData.description,
-    });
-    console.log("New images:", formData.images?.length || 0);
-    console.log("Existing images:", formData.existingImages);
-    console.log("Deleted images:", deletedImages);
-
-    alert("Product updated successfully! (Mock)");
-    // navigate(`/products/${id}`); // Uncomment saat sudah siap
   };
 
-  if (loading) {
+  const handleConfirmCancel = () => {
+    Swal.fire({
+      position: "top",
+      icon: "warning",
+      title: "Cancel editing?",
+      text: "All unsaved changes will be lost.",
+      showCancelButton: true,
+      confirmButtonText: "Yes, cancel",
+      cancelButtonText: "No, continue editing",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate("/products/lists");
+      }
+    });
+  };
+
+  if (loading || !formData) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
         <h2>Loading product data...</h2>
@@ -271,7 +311,10 @@ export default function EditProductPage() {
       <div style={{ padding: "20px", textAlign: "center" }}>
         <h2>Error Loading Product</h2>
         <p style={{ color: "#dc2626" }}>{errors.fetch}</p>
-        <button onClick={() => navigate("/products/lists")}>
+        <button
+          onClick={() => navigate("/products/lists")}
+          className="btn primary"
+        >
           Back to Products
         </button>
       </div>
@@ -300,7 +343,7 @@ export default function EditProductPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-wrapper">
+      <form ref={resetFormRef} onSubmit={handleSubmit} className="form-wrapper">
         <Input
           label="Product Name"
           name="name"
@@ -308,6 +351,7 @@ export default function EditProductPage() {
           onChange={handleChange}
           error={errors.name}
           placeholder="Enter product name"
+          disabled={isSubmitting}
         />
 
         <Input
@@ -320,6 +364,7 @@ export default function EditProductPage() {
           placeholder="0"
           min="0"
           step="0.01"
+          disabled={isSubmitting}
         />
 
         <Input
@@ -331,6 +376,7 @@ export default function EditProductPage() {
           error={errors.stock}
           placeholder="0"
           min="0"
+          disabled={isSubmitting}
         />
 
         <Select
@@ -341,6 +387,7 @@ export default function EditProductPage() {
           options={categories}
           error={errors.category}
           placeholder="Pilih kategori"
+          disabled={isSubmitting}
         />
 
         <Checkbox
@@ -348,6 +395,7 @@ export default function EditProductPage() {
           name="isFeatured"
           checked={formData.isFeatured}
           onChange={handleChange}
+          disabled={isSubmitting}
         />
 
         <Textarea
@@ -358,6 +406,7 @@ export default function EditProductPage() {
           error={errors.description}
           placeholder="Enter product description"
           rows={6}
+          disabled={isSubmitting}
         />
 
         {/* Existing Images Section */}
@@ -387,7 +436,7 @@ export default function EditProductPage() {
                   }}
                 >
                   <img
-                    src={imageUrl}
+                    src={import.meta.env.VITE_BACKEND_BASE_URL + imageUrl}
                     alt={`Existing ${index + 1}`}
                     style={{
                       width: "100%",
@@ -399,10 +448,15 @@ export default function EditProductPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => removeExistingImage(imageUrl)}
+                    onClick={() =>
+                      removeExistingImage(
+                        import.meta.env.VITE_BACKEND_BASE_URL + imageUrl,
+                      )
+                    }
                     title="Remove this image"
                     className="btn-close"
                     aria-label={`Remove existing image ${index + 1}`}
+                    disabled={isSubmitting}
                   >
                     ×
                   </button>
@@ -420,10 +474,10 @@ export default function EditProductPage() {
           error={errors.images}
           accept="image/*"
           multiple={true}
-          //   maxFiles={5}
-          required={false}
+          maxFiles={6}
           showPreviews={true}
           previewSize={100}
+          disabled={isSubmitting}
         />
 
         {/* Image Summary Info Box */}
@@ -452,18 +506,31 @@ export default function EditProductPage() {
           </small>
         </div>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         <div
           style={{
             marginTop: "24px",
             display: "flex",
             gap: "10px",
+            justifyContent: "end",
             paddingTop: "20px",
             borderTop: "1px solid #e5e7eb",
           }}
         >
-          <button type="submit" className="btn primary">
-            Create Product
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={handleConfirmCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="btn primary"
+            disabled={isSubmitting || !hasChanges()}
+          >
+            {isSubmitting ? "Updating..." : "Update Product"}
           </button>
         </div>
       </form>

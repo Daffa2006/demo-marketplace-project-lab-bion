@@ -14,7 +14,7 @@ export default function ProductCard({
   onDelete,
 }) {
   return (
-    <Link style={{ textDecoration: "none" }} to={`/products/detail?id=${id}`}>
+    <Link style={{ textDecoration: "none" }} to={`/products/${id}`}>
       <figure className="product-card">
         <img
           className="product-content"

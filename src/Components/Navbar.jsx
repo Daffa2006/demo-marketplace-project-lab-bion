@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import logo from "../assets/ai-generated-black.png";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { getInitials } from "../helpers";
@@ -8,12 +8,21 @@ import AdminOnly from "../routes/AdminOnly";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ Tambah useLocation
   const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const isActiveLink = (path) => {
+    // Exact match untuk home
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname === path;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -34,7 +43,7 @@ export default function Navbar() {
   // Auto close mobile menu saat route berubah
   useEffect(() => {
     setIsOpen(false);
-  }, []);
+  }, [location.pathname]); // ✅ Update dependency ke location.pathname
 
   const handleLogout = () => {
     logout();
@@ -52,14 +61,14 @@ export default function Navbar() {
             <>
               <Link
                 to="/"
-                className="header-link"
+                className={`header-link ${isActiveLink("/") ? "is-active" : ""}`}
                 onClick={() => setIsOpen(false)}
               >
                 Home
               </Link>
               <Link
                 to="/products"
-                className="header-link"
+                className={`header-link ${isActiveLink("/products") ? "is-active" : ""}`}
                 onClick={() => setIsOpen(false)}
               >
                 List product
@@ -67,14 +76,14 @@ export default function Navbar() {
               <AdminOnly>
                 <Link
                   to="/products/create"
-                  className="header-link"
+                  className={`header-link ${isActiveLink("/products/create") ? "is-active" : ""}`}
                   onClick={() => setIsOpen(false)}
                 >
                   Create product
                 </Link>
                 <Link
                   to="/check-orders"
-                  className="header-link"
+                  className={`header-link ${isActiveLink("/check-orders") ? "is-active" : ""}`}
                   onClick={() => setIsOpen(false)}
                 >
                   Check Orders
@@ -99,7 +108,7 @@ export default function Navbar() {
               {/* Mobile menu actions */}
               <Link
                 to="/profile"
-                className="mobile-menu-item"
+                className={`mobile-menu-item ${isActiveLink("/profile") ? "is-active" : ""}`}
                 onClick={() => setIsOpen(false)}
               >
                 Profile

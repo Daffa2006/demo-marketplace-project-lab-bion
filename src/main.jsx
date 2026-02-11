@@ -29,7 +29,7 @@ createRoot(document.getElementById("root")).render(
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductListPage />} />
-          <Route path="/products/detail" element={<ProductDetailPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/carts" element={<CartPage />} />
@@ -38,7 +38,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="/check-orders/:id" element={<OrderDetailPage />} />
             <Route element={<AdminOnly routeMode={true} />}>
               <Route path="/products/create" element={<CreateProductPage />} />
-              <Route path="/products/edit" element={<EditProductPage />} />
+              <Route path="/products/edit/:id" element={<EditProductPage />} />
             </Route>
           </Route>
           <Route path="/ui" element={<Ui />} />
