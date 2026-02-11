@@ -1,7 +1,10 @@
-export default function ClientOnly({ children }) {
+export default function ClientOnly({ children, routeMode = false }) {
   const user = JSON.parse(localStorage.getItem("online_marketplace_user"));
 
   if (user?.role !== "user") return null;
-
-  return children;
+  if (routeMode) {
+    return <Outlet />;
+  } else {
+    return children;
+  }
 }

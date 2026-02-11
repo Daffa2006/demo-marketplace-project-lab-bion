@@ -1,12 +1,16 @@
 // pages/CreateProductPage.jsx
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router"; // Import useNavigate
 import Swal from "sweetalert2";
+import api from "../lib/axios"; // Import axios instance
 import Input from "../Components/Input";
 import Textarea from "../Components/Textarea";
 import Checkbox from "../Components/Checkbox";
 import FileInput from "../Components/FileInput";
 import Select from "../Components/Select";
+
 export default function CreateProductPage() {
+  const navigate = useNavigate(); // Initialize navigate
   const productFields = {
     name: "",
     price: "",
@@ -17,11 +21,12 @@ export default function CreateProductPage() {
     images: [],
   };
   const [formData, setFormData] = useState(productFields);
-
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   // Ref untuk form
   const resetFormRef = useRef(null);
+
   function handleConfirmReset(e) {
     e.preventDefault();
     Swal.fire({
@@ -29,21 +34,24 @@ export default function CreateProductPage() {
       icon: "warning",
       title: "Reset the form?",
       showCancelButton: true,
-      confirmButtonText: "Yes,reset",
+      confirmButtonText: "Yes, reset",
     }).then((result) => {
       if (result.isConfirmed) {
         setFormData(productFields);
+        setErrors({});
         resetFormRef.current.reset();
       }
     });
   }
+
   const categories = [
     { value: "", label: "Pilih kategori" },
-    { value: "electronics", label: "Electronics" },
-    { value: "fashion", label: "Fashion" },
-    { value: "food", label: "Food & Beverage" },
-    { value: "books", label: "Books" },
-    { value: "toys", label: "Toys" },
+    { value: "daily", label: "Daily" },
+    { value: "formal", label: "Formal" },
+    { value: "sport", label: "Sport" },
+    { value: "night", label: "Night" },
+    { value: "body_mist", label: "Body mist" },
+    { value: "other", label: "Other" },
   ];
 
   const handleChange = (e) => {
@@ -53,7 +61,7 @@ export default function CreateProductPage() {
     if (type === "checkbox") {
       finalValue = checked;
     } else if (type === "file") {
-      finalValue = files || value; // Dari FileInput component
+      finalValue = files;
     } else {
       finalValue = value;
     }
@@ -76,7 +84,7 @@ export default function CreateProductPage() {
 
   const validate = () => {
     const newErrors = {};
-    // Opsional ya ini, kalau pengen ada validasi di sisi frontendnya, atau dihilangkan juga boleh, jika validasinya full dari backend
+
     if (!formData.name.trim()) {
       newErrors.name = "Nama produk harus diisi";
     }
@@ -104,7 +112,7 @@ export default function CreateProductPage() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = validate();
@@ -113,6 +121,8 @@ export default function CreateProductPage() {
       setErrors(newErrors);
       return;
     }
+
+    setIsLoading(true);
 
     const formDataToSend = new FormData();
     formDataToSend.append("name", formData.name);
@@ -129,12 +139,62 @@ export default function CreateProductPage() {
       });
     }
 
-    console.log("Form submitted!");
-    console.log("Total images:", formData.images?.length || 0);
+    try {
+      const response = await api.post("/products", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    // Log semua form data
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(key, value);
+      console.log("Product created:", response.data);
+
+      // Success notification
+      await Swal.fire({
+        position: "top",
+        icon: "success",
+        title: "Product Created!",
+        text: "Your product has been successfully created.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // Reset form
+      setFormData(productFields);
+      setErrors({});
+      resetFormRef.current.reset();
+
+      // Redirect to products list (opsional)
+      // navigate("/products");
+    } catch (error) {
+      console.error("Error creating product:", error);
+
+      // Handle validation errors dari backend
+      if (error.response?.status === 400 && error.response?.data?.errors) {
+        const backendErrors = {};
+        error.response.data.errors.forEach((err) => {
+          backendErrors[err.field] = err.message;
+        });
+        setErrors(backendErrors);
+
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Validation Error",
+          text: "Please check the form and try again.",
+        });
+      } else {
+        // Generic error
+        Swal.fire({
+          position: "top",
+          icon: "error",
+          title: "Error!",
+          text:
+            error.response?.data?.message ||
+            "Failed to create product. Please try again.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -151,6 +211,7 @@ export default function CreateProductPage() {
           error={errors.name}
           placeholder="Enter product name"
           required
+          disabled={isLoading}
         />
 
         <Input
@@ -164,6 +225,7 @@ export default function CreateProductPage() {
           min="0"
           step="0.01"
           required
+          disabled={isLoading}
         />
 
         <Input
@@ -176,6 +238,7 @@ export default function CreateProductPage() {
           placeholder="0"
           min="0"
           required
+          disabled={isLoading}
         />
 
         <Select
@@ -187,6 +250,7 @@ export default function CreateProductPage() {
           error={errors.category}
           placeholder="Pilih kategori"
           required
+          disabled={isLoading}
         />
 
         <Checkbox
@@ -194,6 +258,7 @@ export default function CreateProductPage() {
           name="isFeatured"
           checked={formData.isFeatured}
           onChange={handleChange}
+          disabled={isLoading}
         />
 
         <Textarea
@@ -205,9 +270,9 @@ export default function CreateProductPage() {
           placeholder="Enter product description"
           rows={6}
           required
+          disabled={isLoading}
         />
 
-        {/* FILE INPUT COMPONENT */}
         <FileInput
           label="Product Images"
           name="images"
@@ -215,10 +280,10 @@ export default function CreateProductPage() {
           error={errors.images}
           accept="image/*"
           multiple={true}
-          //   maxFiles={5}
           required={true}
           showPreviews={true}
           previewSize={100}
+          disabled={isLoading}
         />
 
         <div
@@ -233,11 +298,12 @@ export default function CreateProductPage() {
             type="button"
             className="btn secondary"
             onClick={handleConfirmReset}
+            disabled={isLoading}
           >
             Reset form
           </button>
-          <button type="submit" className="btn primary">
-            Create Product
+          <button type="submit" className="btn primary" disabled={isLoading}>
+            {isLoading ? "Creating..." : "Create Product"}
           </button>
         </div>
       </form>

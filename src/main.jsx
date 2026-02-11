@@ -36,7 +36,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="/checkouts" element={<CheckoutPage />} />
             <Route path="/check-orders" element={<OrderHistoryPage />} />
             <Route path="/check-orders/:id" element={<OrderDetailPage />} />
-            <Route element={<AdminOnly />}>
+            <Route element={<AdminOnly routeMode={true} />}>
               <Route path="/products/create" element={<CreateProductPage />} />
               <Route path="/products/edit" element={<EditProductPage />} />
             </Route>

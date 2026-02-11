@@ -8,46 +8,63 @@ export default function FileInput({
   error,
   accept = "image/*",
   multiple = false,
-  maxFiles = 6, // Bebas tergantung kesepakatan
+  maxFiles = 6,
   required = false,
   showPreviews = true,
   previewSize = 100,
+  disabled = false,
 }) {
   const fileInputRef = useRef(null);
   const [previews, setPreviews] = useState([]);
   const [files, setFiles] = useState([]);
 
   const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
+    const newSelectedFiles = Array.from(e.target.files);
 
-    if (multiple && selectedFiles.length > maxFiles) {
-      // Trigger error ke parent
+    // ✅ FIX: Gabungkan file lama + file baru
+    const combinedFiles = [...files, ...newSelectedFiles];
+
+    // Check max files
+    if (multiple && combinedFiles.length > maxFiles) {
       onChange({
         target: {
           name,
           value: [],
           files: [],
-          error: `Maksimal ${maxFiles} file`,
+          error: `Maksimal ${maxFiles} file. Anda sudah punya ${files.length} file.`,
         },
       });
+
+      // Reset input value agar bisa pilih file yang sama lagi
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       return;
     }
 
-    // Create preview URLs
-    const newPreviews = selectedFiles.map((file) => ({
+    // ✅ Create preview untuk file baru aja
+    const newPreviews = newSelectedFiles.map((file) => ({
       url: URL.createObjectURL(file),
       name: file.name,
     }));
 
-    setPreviews(newPreviews);
-    setFiles(selectedFiles);
+    // ✅ Gabungkan preview lama + baru
+    const combinedPreviews = [...previews, ...newPreviews];
+
+    setPreviews(combinedPreviews);
+    setFiles(combinedFiles);
+
+    // Reset input value agar bisa pilih file lagi
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
 
     // Pass files ke parent component
     onChange({
       target: {
         name,
-        value: selectedFiles,
-        files: selectedFiles,
+        value: combinedFiles,
+        files: combinedFiles,
       },
     });
   };
@@ -114,11 +131,16 @@ export default function FileInput({
         accept={accept}
         multiple={multiple}
         onChange={handleFileChange}
+        disabled={disabled}
         aria-invalid={error ? "true" : "false"}
         aria-describedby={error ? `${name}-error` : undefined}
       />
 
-      {multiple && <small>Maximum {maxFiles} files</small>}
+      {multiple && (
+        <small>
+          {files.length} / {maxFiles} files selected
+        </small>
+      )}
 
       {error && (
         <span id={`${name}-error`} className="error-message">
@@ -161,6 +183,7 @@ export default function FileInput({
                   onClick={() => removeFile(index)}
                   className="btn-close"
                   aria-label={`Remove ${preview.name}`}
+                  disabled={disabled}
                 >
                   ×
                 </button>
@@ -173,8 +196,10 @@ export default function FileInput({
               type="button"
               onClick={clearAll}
               className="btn destructive"
+              style={{ marginTop: 24 }}
+              disabled={disabled}
             >
-              Clear All
+              Clear All ({previews.length} files)
             </button>
           )}
         </>
