@@ -139,9 +139,7 @@ export default function HomePage() {
               stock={product.stock}
               price={product.price}
               category={product.category}
-              image={
-                import.meta.env.VITE_BACKEND_BASE_URL + product.images?.[0]
-              }
+              image={product.images?.[0]}
               isFeatured={product.isFeatured}
             />
           ))}
